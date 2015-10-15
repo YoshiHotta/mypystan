@@ -1,9 +1,9 @@
 # mypystan
 
-mypystanはCmdStanの自作ラッパーである。次の二つが不満でラッパーを自作するに至った。
-・PyStanがCmdStanに比べて10倍くらい遅い。
-・PyStanが未完成である。例えばoutput.csvとdiagnostic_fileが読めなかったり、CmdStanから利用できるオプションがPyStanからでは
-　利用できないことがある。
+mypystanはCmdStanの自作ラッパーである。次の二つが不満でラッパーを自作するに至った。  
+* PyStanがCmdStanに比べて10倍くらい遅い。  
+* PyStanが未完成である。例えばoutput.csvとdiagnostic_fileが読めなかったり、CmdStanから利用できるオプションがPyStanからでは
+　利用できないことがある。  
 
 ## インストール方法
 1) CmdStanをインストールします。  
