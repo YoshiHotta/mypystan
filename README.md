@@ -6,8 +6,8 @@ mypystanはCmdStanの自作ラッパーである。次の二つが不満でラ�
 　利用できないことがある。
 
 ## インストール方法
-１）CmdStanをインストール
-２）CmdStanインストール時に作成されるmakeをstanmakeに、printをstanprintにエイリアスしてパスを通す。
+1) CmdStanをインストールします。  
+2) CmdStanインストール時に作成されるmakeをstanmakeに、printをstanprintにエイリアスしてパスを通します。  
 
 ## 使用方法
 関数名、メソッド名はpystanと同じです。[pystanのAPIの説明](https://pystan.readthedocs.org/en/latest/api.html)を参照して下さい。
