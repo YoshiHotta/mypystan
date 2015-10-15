@@ -1,0 +1,29 @@
+# stan_version_major = 2
+# stan_version_minor = 7
+# stan_version_patch = 0
+# model = logistic_model
+# method = optimize
+#   optimize
+#     algorithm = lbfgs (Default)
+#       lbfgs
+#         init_alpha = 0.001 (Default)
+#         tol_obj = 9.9999999999999998e-13 (Default)
+#         tol_rel_obj = 10000 (Default)
+#         tol_grad = 1e-08 (Default)
+#         tol_rel_grad = 10000000 (Default)
+#         tol_param = 1e-08 (Default)
+#         history_size = 5 (Default)
+#     iter = 2000 (Default)
+#     save_iterations = 0 (Default)
+# id = 0 (Default)
+# data
+#   file = data2.dat
+# init = 2 (Default)
+# random
+#   seed = 2568141939
+# output
+#   file = output.csv (Default)
+#   diagnostic_file =  (Default)
+#   refresh = 100 (Default)
+lp__,b1,b2,b3,theta.1,theta.2,theta.3,theta.4,theta.5,theta.6,theta.7,theta.8,theta.9,theta.10,theta.11,theta.12,theta.13,theta.14,theta.15,theta.16,theta.17,theta.18,theta.19,theta.20,theta.21,theta.22,theta.23,theta.24,theta.25,theta.26,theta.27,theta.28,theta.29,theta.30,theta.31,theta.32,theta.33,theta.34,theta.35,theta.36,theta.37,theta.38,theta.39,theta.40,theta.41,theta.42,theta.43,theta.44,theta.45,theta.46,theta.47,theta.48,theta.49,theta.50,theta.51,theta.52,theta.53,theta.54,theta.55,theta.56,theta.57,theta.58,theta.59,theta.60,theta.61,theta.62,theta.63,theta.64,theta.65,theta.66,theta.67,theta.68,theta.69,theta.70,theta.71,theta.72,theta.73,theta.74,theta.75,theta.76,theta.77,theta.78,theta.79,theta.80,theta.81,theta.82,theta.83,theta.84,theta.85,theta.86,theta.87,theta.88,theta.89,theta.90,theta.91,theta.92,theta.93,theta.94,theta.95,theta.96,theta.97,theta.98,theta.99,theta.100
+-336.894,-19.5364,1.95244,2.02151,0.382108,0.716089,0.833203,0.860957,0.224077,0.0882312,0.267417,0.878624,0.0184246,0.953214,0.256099,0.259837,0.0737359,0.691683,0.526256,0.874397,0.472616,0.279047,0.621427,0.929871,0.386728,0.757663,0.217361,0.496994,0.282991,0.982189,0.345969,0.928587,0.716089,0.670484,0.929871,0.241506,0.788454,0.0164213,0.23094,0.96119,0.781867,0.916021,0.750422,0.691683,0.966615,0.980771,0.953214,0.0581683,0.890573,0.720042,0.897955,0.120894,0.53598,0.824903,0.0973249,0.455803,0.81785,0.877657,0.269478,0.122014,0.829197,0.996914,0.533734,0.907444,0.981683,0.455803,0.799745,0.834656,0.970497,0.837333,0.236315,0.689754,0.074456,0.921184,0.842582,0.0718094,0.668486,0.181695,0.752382,0.956199,0.855102,0.672799,0.939993,0.783652,0.998858,0.912248,0.650957,0.986531,0.577095,0.412663,0.17881,0.923973,0.989519,0.974656,0.980225,0.326528,0.862209,0.991021,0.941085,0.947254,0.484979,0.484979,0.907444,0.285126
