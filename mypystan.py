@@ -40,7 +40,7 @@ class StanModel:
         self.sampling()
         self.optimizing()
     """
-    def __init__(self, file=None, model_name='anon_model', model_code=None):
+    def __init__(self, file=None, model_name='anon_model', model_code=None, cmdstan_home=None):
         try:
             if (file is None and model_code is None) or (file is not None and model_code is not None):
                 raise Exception("Exactly one of file or model_code must be specified.")
@@ -50,14 +50,27 @@ class StanModel:
                 f = open(model_name + '.stan', 'w')
                 f.write(model_code)
                 f.close()
-                os.system('stanmake ' + model_name)
+                if(cmdstan_home is None):
+                    os.system('stanmake ' + model_name)
+                else:
+                    pwd = os.getcwd()
+                    os.chdir(cmdstan_home)
+                    os.system('make ' + pwd + '/' + model_name)
+                    os.chdir(pwd)
             else:
                 if file[-5:] != '.stan':
                     raise Exception('file must has the extension .stan.')
                 self.model_name = file[:-5]
                 f = open(file)
                 self.model_code = f.read()
-                os.system('stanmake ' + file)
+                if(cmdstan_home is None):
+                    os.system('stanmake ' + file)
+                else:
+                    pwd = os.getcwd()
+                    os.chdir(cmdstan_home)
+                    os.system('make ' + pwd + '/' + file)
+                    os.chdir(pwd)
+
 
         except:
             print 'StanModel initialization error.'
@@ -76,7 +89,7 @@ class StanModel:
         print 'output.csvが作成されました.'
 
 
-    def sampling(self, data=None, chains=4, iter=2000, warmup=None, thin=1, save_warmup=False, sample_file=None, algorithm=None):
+    def sampling(self, data=None, chains=4, iter=2000, warmup=None, thin=1, save_warmup=False, sample_file=None, algorithm=None, wait_during_sampling=False):
         # generate .stan file
         if ((data is not None) and (sample_file is not None)) or ((data is None) and (sample_file is None)) :
             raise Exception('Exactly one of data or sample_file must be specified.')
@@ -109,25 +122,26 @@ class StanModel:
         else:
             raise Exception('algorithm must be one of Fixed_param, NUTS (default), and HMC.')
 
-        command = ''
-        command += './' + self.model_name + ' id=$i sample '
-        command += 'num_samples=' + str(num_samples) + ' num_warmup=' + str(num_warmup)
-        if save_warmup is True:
-            command += ' save_warmup=1'
-        command += ' ' + algorithmAndEigine
-        command += ' data file=' + self.sample_file
+        for i in range(chains):
+            command = ''
+            command += './' + self.model_name + ' id='+str(i+1)+ ' sample '
+            command += 'num_samples=' + str(num_samples) + ' num_warmup=' + str(num_warmup)
+            if save_warmup is True:
+                command += ' save_warmup=1'
+            command += ' ' + algorithmAndEigine
+            command += ' data file=' + self.sample_file + ' output file=output' + str(i+1) + '.csv'
+            # if wait_during_sampling is true, the final '&' will be omitted.
+            if (wait_during_sampling == False) or (i < chains-1): 
+                command += '&'
+            command += '\n'
+            os.system(command)
+            print command
 
-        shscript = ""
-        shscript += "for i in {1.." + str(chains) + "}\ndo\n\t"
-        shscript += command + ' output file=output$i.csv& \n'
-        shscript += "done"
-        os.system(shscript) # this generates a output?.csv as default
-
-        print shscript
         outputFiles = []
         for i in range(1, chains+1):
             outputFiles.append('output' + str(i) + '.csv')
         return StanFit4model(outputFiles)
+
 
     def optimizing(self, data=None, sample_file=None, algorithm=None):
         # generate .stan file
@@ -161,6 +175,44 @@ class StanModel:
 
         return collections.OrderedDict(retDict) # PyStanではOrderedDictを返すので真似た。
 
+
+    def variational(self, data=None, sample_file=None, \
+                    algorithm='meanfield', iter=10000, 
+                    grad_samples=1, elbo_samples=100, eta=100, 
+                    tol_rel_obj=0.01, output_samples=1000):
+        """ interface of the  variational inference """
+        if ((data is not None) and (sample_file is not None)) or ((data is None) and (sample_file is None)) :
+            raise Exception('Exactly one of data or sample_file must be specified.')
+        if data is not None:
+            if isinstance(data, dict):
+                data_dict = data
+            elif isinstance(data, pandas.DataFrame):
+                data_dict = data.to_dict()
+            else:
+                raise Exception('data must be a dict or a pandas.DataFrame.')
+            sampleFileName =  '.input.data.R'
+            pystan.stan_rdump(data_dict, sampleFileName)
+        elif sample_file is not None:
+            sampleFileName = sample_file
+
+        command = ''
+        command += './' + self.model_name + ' variational'
+        command += ' algorithm=' +algorithm.lower()
+        command += ' iter=' + str(iter)
+        command += ' grad_samples=' + str(grad_samples)
+        command += ' elbo_samples=' + str(elbo_samples)
+        command += ' eta=' + str(eta)
+        command += ' tol_rel_obj=' + str(tol_rel_obj)
+        command += ' output_samples=' + str(output_samples)
+        command += ' data file=' + sampleFileName
+        
+        os.system(command) # this generates a output.csv as default
+    
+        outputFiles = []
+        outputFiles.append('output.csv')
+        return StanFit4model(outputFiles)
+        
+        
 class StanFit4model:
     """
     class StanFit4Model:
@@ -243,6 +295,43 @@ class StanFit4model:
             return ret
 
 
+    def extract_array(self, pars=None, permuted=True):
+        """ Extract method that store the array-parameters as dictionary of arrays 
+        
+            Currently, only the vector-parameter is supported
+        """
+        dic = self.extract(pars, permuted)
+        ret = collections.OrderedDict()
+        # check if key is an array-parameter
+        for key, value in dic.items():
+            split_key = key.split('.')
+            # scalar parameter
+            if len(split_key)==1: 
+                ret[split_key[0]] = value
+            # array parameter
+            else:
+                # first attribute
+                if split_key[0] not in ret:
+                    # vector parameter
+                    if len(split_key) == 2:
+                        ret[split_key[0]] = []
+                        ret[split_key[0]].append(value)
+                    # matrix parameter
+                    else:
+                        raise "matrix is not currently supported"
+                    
+                # not the first attribute
+                else:
+                    # vector parameter
+                    if len(split_key) == 2:
+                        ret[split_key[0]].append(value)
+                    # matrix parameter
+                    else:
+                        raise "matrix is not currently supported"
+                    
+        return ret                
+        
+        
     # def _extract(self):
     #     """.plot用にextractする。"""
     #     # 返り値のarrayのshapeを決定する
