@@ -298,7 +298,7 @@ class StanFit4model:
     def extract_array(self, pars=None, permuted=True):
         """ Extract method that store the array-parameters as dictionary of arrays 
         
-            Currently, only the vector-parameter is supported
+            Currently, only the vector-parameter and matrix-parameters are supported
         """
         dic = self.extract(pars, permuted)
         ret = collections.OrderedDict()
@@ -312,13 +312,16 @@ class StanFit4model:
             else:
                 # first attribute
                 if split_key[0] not in ret:
+                    ret[split_key[0]] = []
                     # vector parameter
                     if len(split_key) == 2:
-                        ret[split_key[0]] = []
                         ret[split_key[0]].append(value)
                     # matrix parameter
+                    elif len(split_key) == 3:
+                        ret[split_key[0]].append([value])
+                    # tensor parameter
                     else:
-                        raise "matrix is not currently supported"
+                        raise "tensor parameter is not currently supported"
                     
                 # not the first attribute
                 else:
@@ -326,8 +329,15 @@ class StanFit4model:
                     if len(split_key) == 2:
                         ret[split_key[0]].append(value)
                     # matrix parameter
+                    elif len(split_key) == 3:
+                        row = int(split_key[1])-1
+                        # first column
+                        if len(ret[split_key[0]]) <= row:
+                            ret[split_key[0]].append([value])
+                        else:
+                            ret[split_key[0]][row].append(value)
                     else:
-                        raise "matrix is not currently supported"
+                        raise "tensor parameter is not currently supported"
                     
         return ret                
         
