@@ -169,6 +169,7 @@ class StanModel:
         command = ''
         command += './' + self.model_name + ' optimize '
         command += 'algorithm=' +algorithm.lower()
+        command += ' iter=' + str(iter)
         if args is not None:
             command += ' ' + args
         command += ' data file=' + sampleFileName
