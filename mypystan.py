@@ -89,7 +89,7 @@ class StanModel:
         print 'output.csvが作成されました.'
 
 
-    def sampling(self, data=None, chains=4, iter=2000, warmup=None, thin=1, save_warmup=False, sample_file=None, algorithm=None, wait_during_sampling=False):
+    def sampling(self, data=None, chains=4, iter=2000, warmup=None, thin=1, save_warmup=False, sample_file=None, algorithm=None, wait_during_sampling=False, args=None):
         # generate .stan file
         if ((data is not None) and (sample_file is not None)) or ((data is None) and (sample_file is None)) :
             raise Exception('Exactly one of data or sample_file must be specified.')
@@ -129,6 +129,8 @@ class StanModel:
             if save_warmup is True:
                 command += ' save_warmup=1'
             command += ' ' + algorithmAndEigine
+            if args is not None:
+                command += ' ' + args
             command += ' data file=' + self.sample_file + ' output file=output' + str(i+1) + '.csv'
             # if wait_during_sampling is true, the final '&' will be omitted.
             if (wait_during_sampling == False) or (i < chains-1): 
@@ -143,7 +145,7 @@ class StanModel:
         return StanFit4model(outputFiles)
 
 
-    def optimizing(self, data=None, sample_file=None, algorithm=None):
+    def optimizing(self, data=None, sample_file=None, algorithm=None, iter=2000, args=None ):
         # generate .stan file
         if ((data is not None) and (sample_file is not None)) or ((data is None) and (sample_file is None)) :
             raise Exception('Exactly one of data or sample_file must be specified.')
@@ -167,7 +169,10 @@ class StanModel:
         command = ''
         command += './' + self.model_name + ' optimize '
         command += 'algorithm=' +algorithm.lower()
+        if args is not None:
+            command += ' ' + args
         command += ' data file=' + sampleFileName
+            
         os.system(command) # this generates a output.csv as default
         outputDataFrame = pandas.read_csv('output.csv', comment='#')
         retDict = outputDataFrame.to_dict()
@@ -179,7 +184,7 @@ class StanModel:
     def variational(self, data=None, sample_file=None, \
                     algorithm='meanfield', iter=10000, 
                     grad_samples=1, elbo_samples=100, eta=100, 
-                    tol_rel_obj=0.01, output_samples=1000):
+                    tol_rel_obj=0.01, output_samples=1000, args=None):
         """ interface of the  variational inference """
         if ((data is not None) and (sample_file is not None)) or ((data is None) and (sample_file is None)) :
             raise Exception('Exactly one of data or sample_file must be specified.')
@@ -203,6 +208,8 @@ class StanModel:
         command += ' elbo_samples=' + str(elbo_samples)
         command += ' eta=' + str(eta)
         command += ' tol_rel_obj=' + str(tol_rel_obj)
+        if args is not None:
+            command += ' ' + args
         command += ' output_samples=' + str(output_samples)
         command += ' data file=' + sampleFileName
         
