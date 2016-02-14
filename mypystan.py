@@ -20,6 +20,7 @@ class StanFit4Model:
     self.summary()
     self.stanprint()
 """
+from apt_pkg import init
 
 __author__ = 'yoshi'
 
@@ -89,8 +90,10 @@ class StanModel:
         print 'output.csvが作成されました.'
 
 
-    def sampling(self, data=None, chains=4, iter=2000, warmup=None, thin=1, save_warmup=False, sample_file=None, algorithm=None, wait_during_sampling=False, args=None):
-        # generate .stan file
+    def sampling(self, data=None, chains=4, iter=2000, warmup=None, thin=1, \
+                 save_warmup=False, sample_file=None, algorithm=None, wait_during_sampling=False, \
+                 init=None, init_file=None, args=None):
+        # generate .data.R file for data
         if ((data is not None) and (sample_file is not None)) or ((data is None) and (sample_file is None)) :
             raise Exception('Exactly one of data or sample_file must be specified.')
         if data is not None:
@@ -105,6 +108,24 @@ class StanModel:
         elif sample_file is not None:
             self.sample_file = sample_file
 
+        # generate .init.param.R if specified
+        init_command = ''     
+        if (data is not None) and (sample_file is not None):
+            raise Exception('Initial parameters should be specified either by init (dict) or init_file (file name)')
+        else:
+            if init_file is not None:
+                self.init_file =  init_file
+            elif init is not None:
+                if isinstance(init, dict):
+                    init_dict = init
+                elif isinstance(init, pandas.DataFrame):
+                    init_dict = init.to_dict()
+                else:  
+                    raise Exception('init must be a dict or a pandas.DataFrame.')
+                self.init_file =  '.init.param.R'
+                pystan.stan_rdump(init_dict, self.init_file)
+            init_command = ' init='+self.init_file+' '
+            
         # num_samples and num_warmup definitions
         if warmup is None:
             warmup = iter // 2
@@ -132,6 +153,7 @@ class StanModel:
             if args is not None:
                 command += ' ' + args
             command += ' data file=' + self.sample_file + ' output file=output' + str(i+1) + '.csv'
+            command += init_command
             # if wait_during_sampling is true, the final '&' will be omitted.
             if (wait_during_sampling == False) or (i < chains-1): 
                 command += '&'
@@ -145,7 +167,8 @@ class StanModel:
         return StanFit4model(outputFiles)
 
 
-    def optimizing(self, data=None, sample_file=None, algorithm=None, iter=2000, args=None ):
+    def optimizing(self, data=None, sample_file=None, algorithm=None, iter=2000, \
+                   init=None, init_file=None, args=None ):
         # generate .stan file
         if ((data is not None) and (sample_file is not None)) or ((data is None) and (sample_file is None)) :
             raise Exception('Exactly one of data or sample_file must be specified.')
@@ -161,6 +184,24 @@ class StanModel:
         elif sample_file is not None:
             sampleFileName = sample_file
 
+        # generate .init.param.R if specified
+        init_command = ''     
+        if (data is not None) and (sample_file is not None):
+            raise Exception('Initial parameters should be specified either by init (dict) or init_file (file name)')
+        else:
+            if init_file is not None:
+                self.init_file =  init_file
+            elif init is not None:
+                if isinstance(init, dict):
+                    init_dict = init
+                elif isinstance(init, pandas.DataFrame):
+                    init_dict = init.to_dict()
+                else:  
+                    raise Exception('init must be a dict or a pandas.DataFrame.')
+                self.init_file =  '.init.param.R'
+                pystan.stan_rdump(init_dict, self.init_file)
+            init_command = ' init='+self.init_file+' '
+
         if (algorithm is not None) and (isinstance(algorithm, str) is False):
             raise Exception('algorithm must be a string.')
         elif algorithm is None:
@@ -173,7 +214,8 @@ class StanModel:
         if args is not None:
             command += ' ' + args
         command += ' data file=' + sampleFileName
-            
+        command += init_command
+        
         os.system(command) # this generates a output.csv as default
         outputDataFrame = pandas.read_csv('output.csv', comment='#')
         retDict = outputDataFrame.to_dict()
@@ -183,9 +225,10 @@ class StanModel:
 
 
     def variational(self, data=None, sample_file=None, \
-                    algorithm='meanfield', iter=10000, 
-                    grad_samples=1, elbo_samples=100, eta=100, 
-                    tol_rel_obj=0.01, output_samples=1000, args=None):
+                    algorithm='meanfield', iter=10000, \
+                    grad_samples=1, elbo_samples=100, eta=100, \
+                    tol_rel_obj=0.01, output_samples=1000, \
+                    init=None, init_file=None, args=None):
         """ interface of the  variational inference """
         if ((data is not None) and (sample_file is not None)) or ((data is None) and (sample_file is None)) :
             raise Exception('Exactly one of data or sample_file must be specified.')
@@ -201,6 +244,24 @@ class StanModel:
         elif sample_file is not None:
             sampleFileName = sample_file
 
+        # generate .init.param.R if specified
+        init_command = ''     
+        if (data is not None) and (sample_file is not None):
+            raise Exception('Initial parameters should be specified either by init (dict) or init_file (file name)')
+        else: 
+            if init_file is not None:
+                self.init_file =  init_file
+            elif init is not None:
+                if isinstance(init, dict):
+                    init_dict = init
+                elif isinstance(init, pandas.DataFrame):
+                    init_dict = init.to_dict()
+                else:  
+                    raise Exception('init must be a dict or a pandas.DataFrame.')
+                self.init_file =  '.init.param.R'
+                pystan.stan_rdump(init_dict, self.init_file)
+            init_command = ' init='+self.init_file+' '
+
         command = ''
         command += './' + self.model_name + ' variational'
         command += ' algorithm=' +algorithm.lower()
@@ -213,6 +274,7 @@ class StanModel:
             command += ' ' + args
         command += ' output_samples=' + str(output_samples)
         command += ' data file=' + sampleFileName
+        command += init_command
         
         os.system(command) # this generates a output.csv as default
     
