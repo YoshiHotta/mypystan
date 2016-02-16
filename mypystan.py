@@ -385,7 +385,7 @@ class StanFit4model:
                     ret[split_key[0]] = []
                     # vector parameter
                     if len(split_key) == 2:
-                        ret[split_key[0]].append(value[0])
+                        ret[split_key[0]].append(value)
                     # matrix parameter
                     elif len(split_key) == 3:
                         ret[split_key[0]].append([value])
@@ -397,15 +397,15 @@ class StanFit4model:
                 else:
                     # vector parameter
                     if len(split_key) == 2:
-                        ret[split_key[0]].append(value[0])
+                        ret[split_key[0]].append(value)
                     # matrix parameter
                     elif len(split_key) == 3:
                         row = int(split_key[1])-1
                         # first column
                         if len(ret[split_key[0]]) <= row:
-                            ret[split_key[0]].append([value[0]])
+                            ret[split_key[0]].append([value])
                         else:
-                            ret[split_key[0]][row].append(value[0])
+                            ret[split_key[0]][row].append(value)
                     else:
                         raise "tensor parameter is not currently supported"
                     
