@@ -109,22 +109,23 @@ class StanModel:
             self.sample_file = sample_file
 
         # generate .init.param.R if specified
-        init_command = ''     
-        if (data is not None) and (sample_file is not None):
+        if (init is not None) and (init_file is not None):
             raise Exception('Initial parameters should be specified either by init (dict) or init_file (file name)')
-        else:
-            if init_file is not None:
-                self.init_file =  init_file
-            elif init is not None:
-                if isinstance(init, dict):
-                    init_dict = init
-                elif isinstance(init, pandas.DataFrame):
-                    init_dict = init.to_dict()
-                else:  
-                    raise Exception('init must be a dict or a pandas.DataFrame.')
-                self.init_file =  '.init.param.R'
-                pystan.stan_rdump(init_dict, self.init_file)
+        init_command = ''     
+        if init_file is not None:
+            self.init_file =  init_file
             init_command = ' init='+self.init_file+' '
+        elif init is not None:
+            if isinstance(init, dict):
+                init_dict = init
+            elif isinstance(init, pandas.DataFrame):
+                init_dict = init.to_dict()
+            else:  
+                raise Exception('init must be a dict or a pandas.DataFrame.')
+            self.init_file =  '.init.param.R'
+            pystan.stan_rdump(init_dict, self.init_file)
+            init_command = ' init='+self.init_file+' '
+
             
         # num_samples and num_warmup definitions
         if warmup is None:
@@ -185,22 +186,24 @@ class StanModel:
             sampleFileName = sample_file
 
         # generate .init.param.R if specified
-        init_command = ''     
-        if (data is not None) and (sample_file is not None):
+        # generate .init.param.R if specified
+        if (init is not None) and (init_file is not None):
             raise Exception('Initial parameters should be specified either by init (dict) or init_file (file name)')
-        else:
-            if init_file is not None:
-                self.init_file =  init_file
-            elif init is not None:
-                if isinstance(init, dict):
-                    init_dict = init
-                elif isinstance(init, pandas.DataFrame):
-                    init_dict = init.to_dict()
-                else:  
-                    raise Exception('init must be a dict or a pandas.DataFrame.')
-                self.init_file =  '.init.param.R'
-                pystan.stan_rdump(init_dict, self.init_file)
+        init_command = ''     
+        if init_file is not None:
+            self.init_file =  init_file
             init_command = ' init='+self.init_file+' '
+        elif init is not None:
+            if isinstance(init, dict):
+                init_dict = init
+            elif isinstance(init, pandas.DataFrame):
+                init_dict = init.to_dict()
+            else:  
+                raise Exception('init must be a dict or a pandas.DataFrame.')
+            self.init_file =  '.init.param.R'
+            pystan.stan_rdump(init_dict, self.init_file)
+            init_command = ' init='+self.init_file+' '
+
 
         if (algorithm is not None) and (isinstance(algorithm, str) is False):
             raise Exception('algorithm must be a string.')
@@ -245,22 +248,23 @@ class StanModel:
             sampleFileName = sample_file
 
         # generate .init.param.R if specified
-        init_command = ''     
-        if (data is not None) and (sample_file is not None):
+        if (init is not None) and (init_file is not None):
             raise Exception('Initial parameters should be specified either by init (dict) or init_file (file name)')
-        else: 
-            if init_file is not None:
-                self.init_file =  init_file
-            elif init is not None:
-                if isinstance(init, dict):
-                    init_dict = init
-                elif isinstance(init, pandas.DataFrame):
-                    init_dict = init.to_dict()
-                else:  
-                    raise Exception('init must be a dict or a pandas.DataFrame.')
-                self.init_file =  '.init.param.R'
-                pystan.stan_rdump(init_dict, self.init_file)
+        init_command = ''     
+        if init_file is not None:
+            self.init_file =  init_file
             init_command = ' init='+self.init_file+' '
+        elif init is not None:
+            if isinstance(init, dict):
+                init_dict = init
+            elif isinstance(init, pandas.DataFrame):
+                init_dict = init.to_dict()
+            else:  
+                raise Exception('init must be a dict or a pandas.DataFrame.')
+            self.init_file =  '.init.param.R'
+            pystan.stan_rdump(init_dict, self.init_file)
+            init_command = ' init='+self.init_file+' '
+
 
         command = ''
         command += './' + self.model_name + ' variational'
