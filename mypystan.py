@@ -20,8 +20,6 @@ class StanFit4Model:
     self.summary()
     self.stanprint()
 """
-from apt_pkg import init
-
 __author__ = 'yoshi'
 
 import os, pandas, pystan, collections, numpy, scipy
