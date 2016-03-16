@@ -90,7 +90,7 @@ class StanModel:
 
     def sampling(self, data=None, chains=4, iter=2000, warmup=None, thin=1, \
                  save_warmup=False, sample_file=None, algorithm=None, wait_during_sampling=False, \
-                 init=None, init_file=None, args=None):
+                 init=None, init_file=None, output_file=None, args=None):
         # generate .data.R file for data
         if ((data is not None) and (sample_file is not None)) or ((data is None) and (sample_file is None)) :
             raise Exception('Exactly one of data or sample_file must be specified.')
@@ -141,7 +141,11 @@ class StanModel:
             algorithmAndEigine = 'algorithm=hmc engine=static'
         else:
             raise Exception('algorithm must be one of Fixed_param, NUTS (default), and HMC.')
-
+        
+        # output file
+        if output_file is None:
+            output_file = 'output'
+            
         for i in range(chains):
             command = ''
             command += './' + self.model_name + ' id='+str(i+1)+ ' sample '
@@ -151,7 +155,7 @@ class StanModel:
             command += ' ' + algorithmAndEigine
             if args is not None:
                 command += ' ' + args
-            command += ' data file=' + self.sample_file + ' output file=output' + str(i+1) + '.csv'
+            command += ' data file=' + self.sample_file + ' output file=' + output_file + str(i+1) + '.csv'
             command += init_command
             # if wait_during_sampling is true, the final '&' will be omitted.
             if (wait_during_sampling == False) or (i < chains-1): 
@@ -162,12 +166,12 @@ class StanModel:
 
         outputFiles = []
         for i in range(1, chains+1):
-            outputFiles.append('output' + str(i) + '.csv')
+            outputFiles.append(output_file + str(i) + '.csv')
         return StanFit4model(outputFiles)
 
 
     def optimizing(self, data=None, sample_file=None, algorithm=None, iter=2000, \
-                   init=None, init_file=None, args=None ):
+                   init=None, init_file=None, output_file=None, args=None ):
         # generate .stan file
         if ((data is not None) and (sample_file is not None)) or ((data is None) and (sample_file is None)) :
             raise Exception('Exactly one of data or sample_file must be specified.')
@@ -202,6 +206,9 @@ class StanModel:
             pystan.stan_rdump(init_dict, self.init_file)
             init_command = ' init='+self.init_file+' '
 
+        # output file
+        if output_file is None:
+            output_file = 'output'
 
         if (algorithm is not None) and (isinstance(algorithm, str) is False):
             raise Exception('algorithm must be a string.')
@@ -216,9 +223,10 @@ class StanModel:
             command += ' ' + args
         command += ' data file=' + sampleFileName
         command += init_command
+        command += ' output file=' + output_file + '.csv'
         
         os.system(command) # this generates a output.csv as default
-        outputDataFrame = pandas.read_csv('output.csv', comment='#')
+        outputDataFrame = pandas.read_csv(output_file + '.csv', comment='#')
         retDict = outputDataFrame.to_dict()
         del retDict['lp__']
 
@@ -229,7 +237,8 @@ class StanModel:
                     algorithm='meanfield', iter=10000, \
                     grad_samples=1, elbo_samples=100, eta=100, \
                     tol_rel_obj=0.01, output_samples=1000, \
-                    init=None, init_file=None, args=None):
+                    init=None, init_file=None, output_file=None,\
+                    args=None):
         """ interface of the  variational inference """
         if ((data is not None) and (sample_file is not None)) or ((data is None) and (sample_file is None)) :
             raise Exception('Exactly one of data or sample_file must be specified.')
@@ -263,6 +272,9 @@ class StanModel:
             pystan.stan_rdump(init_dict, self.init_file)
             init_command = ' init='+self.init_file+' '
 
+        # output file
+        if output_file is None:
+            output_file = 'output'
 
         command = ''
         command += './' + self.model_name + ' variational'
@@ -277,11 +289,12 @@ class StanModel:
         command += ' output_samples=' + str(output_samples)
         command += ' data file=' + sampleFileName
         command += init_command
-        
+        command += ' output file=' + output_file + '.csv'
+
         os.system(command) # this generates a output.csv as default
     
         outputFiles = []
-        outputFiles.append('output.csv')
+        outputFiles.append(output_file + '.csv')
         return StanFit4model(outputFiles)
         
         
@@ -300,7 +313,7 @@ class StanFit4model:
         if csvFileNames is None:
             self.csvFileNames = ['output.csv']
         elif isinstance(csvFileNames[0], str) is False:
-            raise Exception('csvFileNames must be a liest of strings.')
+            raise Exception('csvFileNames must be a list of strings.')
         else:
             self.csvFileNames = csvFileNames
 
