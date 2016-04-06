@@ -218,9 +218,9 @@ class StanModel:
         command = ''
         command += './' + self.model_name + ' optimize '
         command += 'algorithm=' +algorithm.lower()
-        command += ' iter=' + str(iter)
         if args is not None:
             command += ' ' + args
+        command += ' iter=' + str(iter)
         command += ' data file=' + sampleFileName
         command += init_command
         command += ' output file=' + output_file + '.csv'
@@ -235,7 +235,7 @@ class StanModel:
 
     def variational(self, data=None, sample_file=None, \
                     algorithm='meanfield', iter=10000, \
-                    grad_samples=1, elbo_samples=100, eta=100, \
+                    grad_samples=1, elbo_samples=100, eta=1.0, \
                     tol_rel_obj=0.01, output_samples=1000, \
                     init=None, init_file=None, output_file=None,\
                     args=None):
@@ -280,9 +280,12 @@ class StanModel:
         command += './' + self.model_name + ' variational'
         command += ' algorithm=' +algorithm.lower()
         command += ' iter=' + str(iter)
-        command += ' grad_samples=' + str(grad_samples)
-        command += ' elbo_samples=' + str(elbo_samples)
-        command += ' eta=' + str(eta)
+        if grad_samples is not None:
+            command += ' grad_samples=' + str(grad_samples)
+        if elbo_samples is not None:
+            command += ' elbo_samples=' + str(elbo_samples)
+        if eta is not None:
+            command += ' eta=' + str(eta)
         command += ' tol_rel_obj=' + str(tol_rel_obj)
         if args is not None:
             command += ' ' + args
