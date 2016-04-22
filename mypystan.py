@@ -39,7 +39,7 @@ class StanModel:
         self.sampling()
         self.optimizing()
     """
-    def __init__(self, file=None, model_name='anon_model', model_code=None, cmdstan_home=None):
+    def __init__(self, file=None, model_name='anon_model', model_code=None):
         try:
             if (file is None and model_code is None) or (file is not None and model_code is not None):
                 raise Exception("Exactly one of file or model_code must be specified.")
@@ -49,13 +49,8 @@ class StanModel:
                 f = open(model_name + '.stan', 'w')
                 f.write(model_code)
                 f.close()
-                if(cmdstan_home is None):
-                    os.system('stanmake ' + model_name)
-                else:
-                    pwd = os.getcwd()
-                    os.chdir(cmdstan_home)
-                    os.system('make ' + pwd + '/' + model_name)
-                    os.chdir(pwd)
+                os.system('stanmake ' + model_name)
+
             else:
                 if file[-5:] != '.stan':
                     raise Exception('file must has the extension .stan.')
