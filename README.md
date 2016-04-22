@@ -16,6 +16,7 @@ alias stanmake='make -f /home/keisukefujii/stan/cmdstan-2.9.0/makefile'
 alias stanprint='/home/keisukefujii/stan/cmdstan-2.9.0/bin/print'
 `
 を記載します。 
+2.3. 一度ログアウトし再ログインします。
 
 ## 使用方法
 関数名、メソッド名はpystanと同じです。[pystanのAPIの説明](https://pystan.readthedocs.org/en/latest/api.html)を参照して下さい。

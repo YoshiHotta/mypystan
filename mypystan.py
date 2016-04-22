@@ -26,6 +26,7 @@ import os, pandas, pystan, collections, numpy, scipy
 from exceptions import Exception
 
 import pymc.plots
+import subprocess
 
 class StanModel:
     """
@@ -39,7 +40,7 @@ class StanModel:
         self.sampling()
         self.optimizing()
     """
-    def __init__(self, file=None, model_name='anon_model', model_code=None):
+    def __init__(self, file=None, model_name='anon_model', model_code=None, cmdstan_home=None):
         try:
             if (file is None and model_code is None) or (file is not None and model_code is not None):
                 raise Exception("Exactly one of file or model_code must be specified.")
@@ -49,7 +50,13 @@ class StanModel:
                 f = open(model_name + '.stan', 'w')
                 f.write(model_code)
                 f.close()
-                os.system('stanmake ' + model_name)
+                if(cmdstan_home is None):
+                    os.system('stanmake ' + model_name)
+                else:
+                    pwd = os.getcwd()
+                    os.chdir(cmdstan_home)
+                    os.system('make ' + pwd + '/' + model_name)
+                    os.chdir(pwd)
 
             else:
                 if file[-5:] != '.stan':
@@ -334,10 +341,8 @@ class StanFit4model:
 
     def extract(self, pars=None, permuted=True):
         """ OrderedDictを返す。返り値はOrderedDict({'parName': array, ...})の形になっている。
-        形式がPyStanとは違う。PyStanでは、
         'parName'がarrayでないモデルパラメータの時はarrayは一次元である。
-        'parName'がarrayのモデルパラメータ達の時はarrayは２次元で、サイズはnum_samples * パラメータ数である
-        となっているが、本関数では二つを区別していない。"""
+        'parName'がarrayのモデルパラメータ達の時はarrayは２次元で、サイズはnum_samples * パラメータ数である"""
         if permuted is True:
             ret = collections.OrderedDict()
             for i in range(0, len(self.csvFileNames)):
@@ -350,9 +355,83 @@ class StanFit4model:
                         ret[key] = numpy.array(df[key].tolist())
                     else:
                         ret[key] = numpy.append(ret[key], numpy.array(df[key].tolist()))
-                    if i == len(self.csvFileNames) - 1:
-                        ret[key] = numpy.random.permutation( ret[key] )
-            return ret
+            
+            # making array
+            ret2 = collections.OrderedDict()
+            for key, item in ret.items():
+                split_key = key.split('.')
+                
+                # scalar parameter
+                if len(split_key)==1: 
+                    ret2[split_key[0]] = item
+                # array parameter
+                else:
+                    # vector parameter
+                    if len(split_key) == 2:
+                        # first element
+                        if split_key[1] == '1':
+                            ret2[split_key[0]] = [item]
+                        else:
+                            ret2[split_key[0]].append(item)
+                    # matrix parameter
+                    elif len(split_key) == 3:
+                        row = int(split_key[1])-1
+                        # first column
+                        if len(ret[split_key[0]]) <= row:
+                            ret[split_key[0]].append([item])
+                        else:
+                            ret[split_key[0]][row].append(item)
+                    else:
+                        raise "tensor parameter is not currently supported"
+                                        
+                        
+            else:
+                # first attribute
+                if split_key[0] not in ret:
+                    ret[split_key[0]] = []
+                    # vector parameter
+                    if len(split_key) == 2:
+                        ret[split_key[0]].append(item)
+                    # matrix parameter
+                    elif len(split_key) == 3:
+                        ret[split_key[0]].append([item])
+                    # tensor parameter
+                    else:
+                        raise "tensor parameter is not currently supported"
+                    
+                # not the first attribute
+                else:
+                    # vector parameter
+                    if len(split_key) == 2:
+                        ret[split_key[0]].append(item)
+                    # matrix parameter
+                    elif len(split_key) == 3:
+                        row = int(split_key[1])-1
+                        # first column
+                        if len(ret[split_key[0]]) <= row:
+                            ret[split_key[0]].append([item])
+                        else:
+                            ret[split_key[0]][row].append(item)
+                    else:
+                        raise "tensor parameter is not currently supported"
+
+            # transposing the array variables
+            for key, item in ret2.items():
+                # if array case
+                if len(numpy.array(item).shape) > 1:
+                    ret2[key] = zip(*item)
+            
+            # permutation
+            ret3 = collections.OrderedDict()
+            
+            index_list = range(len(ret2[ret2.keys()[0]]))
+            numpy.random.shuffle(index_list)
+            for key in ret2.keys():
+                 ret3[key] = [ret2[key][index] for index in index_list]
+            
+            return ret3
+        
+        
         else:
             # 返り値のarrayのshapeを決定する
             df = pandas.read_csv(self.csvFileNames[0], comment='#')
