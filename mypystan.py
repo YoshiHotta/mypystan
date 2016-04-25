@@ -463,6 +463,7 @@ class StanFit4model:
 
             return ret
 
+
     # depreted
 '''    def extract_array(self, pars=None, permuted=True):
         """ Extract method that store the array-parameters as dictionary of arrays 
