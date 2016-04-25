@@ -376,11 +376,15 @@ class StanFit4model:
                     # matrix parameter
                     elif len(split_key) == 3:
                         row = int(split_key[1])-1
+                        col = int(split_key[2])-1
+                        # first row
+                        if not split_key[0] in ret2.keys():
+                            ret2[split_key[0]] = [[item]]
                         # first column
-                        if len(ret[split_key[0]]) <= row:
-                            ret[split_key[0]].append([item])
+                        elif len(ret2[split_key[0]]) <= row:
+                            ret2[split_key[0]].append([item])
                         else:
-                            ret[split_key[0]][row].append(item)
+                            ret2[split_key[0]][row].append(item)
                     else:
                         raise "tensor parameter is not currently supported"
                                         
@@ -417,10 +421,13 @@ class StanFit4model:
 
             # transposing the array variables
             for key, item in ret2.items():
-                # if array case
-                if len(numpy.array(item).shape) > 1:
-                    ret2[key] = zip(*item)
-            
+                # vector case
+                if len(numpy.array(item).shape) == 2:
+                    ret2[key] = numpy.transpose(numpy.array(item))
+                # matrix case
+                elif len(numpy.array(item).shape) == 3:
+                    ret2[key] = numpy.transpose(numpy.array(item), (2, 0, 1))
+                    
             # permutation
             ret3 = collections.OrderedDict()
             
@@ -456,8 +463,8 @@ class StanFit4model:
 
             return ret
 
-
-    def extract_array(self, pars=None, permuted=True):
+    # depreted
+'''    def extract_array(self, pars=None, permuted=True):
         """ Extract method that store the array-parameters as dictionary of arrays 
         
             Currently, only the vector-parameter and matrix-parameters are supported
@@ -547,3 +554,4 @@ class StanFit4model:
 #        fileContent = f.read()
 #        f.close()
 #        return fileContent
+'''
