@@ -388,37 +388,6 @@ class StanFit4model:
                     else:
                         raise "tensor parameter is not currently supported"
                                         
-                        
-            else:
-                # first attribute
-                if split_key[0] not in ret:
-                    ret[split_key[0]] = []
-                    # vector parameter
-                    if len(split_key) == 2:
-                        ret[split_key[0]].append(item)
-                    # matrix parameter
-                    elif len(split_key) == 3:
-                        ret[split_key[0]].append([item])
-                    # tensor parameter
-                    else:
-                        raise "tensor parameter is not currently supported"
-                    
-                # not the first attribute
-                else:
-                    # vector parameter
-                    if len(split_key) == 2:
-                        ret[split_key[0]].append(item)
-                    # matrix parameter
-                    elif len(split_key) == 3:
-                        row = int(split_key[1])-1
-                        # first column
-                        if len(ret[split_key[0]]) <= row:
-                            ret[split_key[0]].append([item])
-                        else:
-                            ret[split_key[0]][row].append(item)
-                    else:
-                        raise "tensor parameter is not currently supported"
-
             # transposing the array variables
             for key, item in ret2.items():
                 # vector case
